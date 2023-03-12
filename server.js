@@ -18,7 +18,7 @@ app.get('/api', (req, res) => {
 })
 
 
-
+// reginster user
 app.post('/signup', (req, res) => {
     console.log('req body: ', req.body)
 
@@ -37,7 +37,7 @@ app.post('/signup', (req, res) => {
         api_response.message = 'All Parameters not set'
         api_response.notAvailable = paramResponse['notAvailable']
         console.log('param check',api_response, '\n');
-        
+
         res.json(api_response)
     } else {
         
@@ -108,6 +108,76 @@ app.post('/signup', (req, res) => {
     // res.send(api_response) 
 
 })
+
+// login user
+app.post('/login', (req, res) => {
+    console.log('req body: ', req.body)
+
+    const paramResponse = checkParams(req.body, ['email', 'password'])
+    console.log('param response: ', paramResponse, '\n');
+
+    var api_response = {
+        error: true,
+        message: 'API did not run properly.'
+    }
+
+    if(paramResponse['error'] === true) {
+        // res.send(paramResponse)
+        console.log("params not available", paramResponse, '\n');
+        api_response.error = true
+        api_response.message = 'All Parameters not set'
+        api_response.notAvailable = paramResponse['notAvailable']
+        console.log('param check',api_response, '\n');
+        
+        res.json(api_response)
+    } else {
+        const email = req.body.email
+        const pass = req.body.password
+
+        const sqlSelect = "Select * from users where Email = ? and Password = ?"
+        db.query(sqlSelect, [email, pass], (err, result) => {
+            if(err) {
+                console.log('Unable to check data.',err, '\n')
+                // res.json(err)
+                api_response.error = true
+                api_response.message = 'Unable to check data. Cannot login right now.'
+                // api_response['notAvailable'] = paramResponse['notAvailable']
+                console.log('db check error: ',api_response, '\n');
+
+                res.send(api_response)
+
+            } else {
+                console.log('db check result: ', result, '\n')
+                // res.json([result, result.length])
+
+                if(result.length === 1) {
+                    console.log("user data exists \n");
+                    api_response.error = false
+                    api_response.message = 'User Data Fetched Successfully!'
+                    api_response.sqlResponse = result
+                    api_response.first_name = result[0]['First_name']
+                    api_response.last_name = result[0]['Last_name']
+                    api_response.email = result[0]['Email']
+                    api_response.mobile = result[0]['Mobile']
+                    api_response.status = result[0]['Status']
+
+                    res.send(api_response)
+                } else {
+                    api_response.error = true
+                    api_response.message = 'User doesnot Exist.'
+                    api_response.sqlResponse = result
+                    console.log("User doesnot Exist. \n");
+                    console.log('user doesnot exists', api_response, '\n');
+
+                    res.send(api_response)
+                }
+            }
+        })
+    }
+
+})
+
+
 
 app.post('/login', (req, res) => {
     res.json({
