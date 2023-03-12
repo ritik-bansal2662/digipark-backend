@@ -18,7 +18,7 @@ app.get('/api', (req, res) => {
 })
 
 
-// reginster user
+// register user
 app.post('/signup', (req, res) => {
     console.log('req body: ', req.body)
 
@@ -104,13 +104,15 @@ app.post('/signup', (req, res) => {
             }
         })
     }    
-    console.log('api response: ', api_response);
+    // console.log('api response: ', api_response);
     // res.send(api_response) 
 
 })
 
+
+
 // login user
-app.post('/login', (req, res) => {
+app.get('/login', (req, res) => {
     console.log('req body: ', req.body)
 
     const paramResponse = checkParams(req.body, ['email', 'password'])
@@ -179,6 +181,119 @@ app.post('/login', (req, res) => {
 
 
 
+// register parking area
+app.post('/register-parking-area', (req, res) => {
+    console.log('req body: ', req.body)
+
+    const paramResponse = checkParams(req.body, [
+        'email', 'name', 'contact_number', 'address_line_1', 'city', 'state', 
+        'pincode', 'number_of_slots', 'latitude', 'longitude', 'owner'
+    ])
+    console.log('param response: ', paramResponse, '\n');
+
+    var api_response = {
+        error: true,
+        message: 'API did not run properly.'
+    }
+
+    if(paramResponse['error'] === true) {
+        // res.send(paramResponse)
+        console.log("params not available", paramResponse, '\n');
+        api_response.error = true
+        api_response.message = 'All Parameters not set'
+        api_response.notAvailable = paramResponse['notAvailable']
+        console.log('param check',api_response, '\n');
+
+        res.json(api_response)
+    } else {
+        
+        const name = req.body.name
+        const email = req.body.email
+        const contact_number = req.body.contact_number
+        const address_line_1 = req.body.address_line_1
+        const address_line_2 = null
+        const city = req.body.city
+        const state = req.body.state
+        const pincode = req.body.pincode
+        const number_of_slots = req.body.number_of_slots
+        const latitude = req.body.latitude
+        const longitude = req.body.longitude
+        const owner = req.body.owner
+        const manager = null
+
+        if(req.body.address_line_2 !== undefined) {
+            const address_line_2 = req.body.address_line_2
+        }
+        if(req.body.manager !== undefined) {
+            const manager = req.body.manager
+        }
+
+        const sqlCheck = "Select * from parking_areas where Email = ? or Contact_number = ?"
+        db.query(sqlCheck, [email, contact_number], (err, result) => {
+            if(err) {
+                console.log('Unable to check already existing data.',err, '\n')
+                // res.json(err)
+                api_response.error = true
+                api_response.message = 'Unable to check already existing data.'
+                // api_response['notAvailable'] = paramResponse['notAvailable']
+                console.log('db check error: ',api_response, '\n');
+
+                res.send(api_response)
+
+            } else {
+                console.log('db check result: ', result, '\n')
+                // res.json([result, result.length])
+
+                if(result.length === 0) {
+                    console.log("Details already doesnot exists! \n");
+                    const sqlInsert = `INSERT INTO parking_areas (
+                            Name, Email, Contact_number, Address_line_1, Address_line_2, City,
+                            State, Pincode, Number_of_slots, Latitude,
+                            Longitude, Owner, Manager
+                        ) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+
+                    db.query(sqlInsert, [
+                            name, email, contact_number, address_line_1, address_line_2, city,
+                            state, pincode, number_of_slots, latitude,
+                            longitude, owner, manager
+                        ], (err, result) => {
+                        if(err) {
+                            console.log('db insertion error',err, '\n')
+                            // res.json(err)
+                            api_response.error = true
+                            api_response.message = 'Error in SQL query or something wrong in Database.'
+                            api_response.sqlResponse = err
+
+                            res.send(api_response)
+                        } else {
+                            console.log(result)
+                            api_response.error = false
+                            api_response.message = 'Successfully registered!'
+                            api_response.sqlResponse = result
+
+                            res.send(api_response)
+                        }
+                    })
+                } else {
+                    api_response.error = true
+                    api_response.message = 'Email or Contact information already linked to some account.'
+                    api_response.sqlResponse = result
+
+                    console.log("Email or Contact information already linked to some account. \n");
+                    console.log('email or contact number exits.', api_response, '\n');
+
+                    res.send(api_response)
+                }
+            }
+        })
+    }    
+    // console.log('api response: ', api_response);
+    // res.send(api_response) 
+
+})
+
+
+
 
 
 
@@ -210,4 +325,6 @@ function checkParams(body, params) {
 
 
 
-app.listen(5000, () => { console.log('\n - - - \n Server started on port 5000. \n - - - \n') })
+app.listen(5000, () => { 
+    console.log('\n - - - \n Server started on port 5000. \n - - - \n') 
+})
