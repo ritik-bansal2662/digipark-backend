@@ -179,12 +179,18 @@ app.post('/login', (req, res) => {
 
 
 
-app.post('/login', (req, res) => {
-    res.json({
-        "name": 'ritik'
-    })
 
-})
+
+
+
+
+
+
+
+
+
+
+
 
 
 
