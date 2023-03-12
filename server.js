@@ -37,6 +37,8 @@ app.post('/signup', (req, res) => {
         api_response.message = 'All Parameters not set'
         api_response.notAvailable = paramResponse['notAvailable']
         console.log('param check',api_response, '\n');
+        
+        res.json(api_response)
     } else {
         
         const fname = req.body.fname
@@ -60,6 +62,9 @@ app.post('/signup', (req, res) => {
                 api_response.message = 'Unable to check already existing data.'
                 // api_response['notAvailable'] = paramResponse['notAvailable']
                 console.log('db check error: ',api_response, '\n');
+
+                res.send(api_response)
+
             } else {
                 console.log('db check result: ', result, '\n')
                 // res.json([result, result.length])
@@ -75,12 +80,16 @@ app.post('/signup', (req, res) => {
                             api_response.error = true
                             api_response.message = 'Error in SQL query or something wrong in Database.'
                             api_response.sqlResponse = err
+
+                            res.send(api_response)
                         } else {
                             console.log(result)
                             // res.json([result, result.length])
                             api_response.error = false
                             api_response.message = 'Successfully registered!'
                             api_response.sqlResponse = result
+
+                            res.send(api_response)
                         }
                     })
                 } else {
@@ -89,12 +98,14 @@ app.post('/signup', (req, res) => {
                     api_response.sqlResponse = result
                     console.log("User already exists. \n");
                     console.log('user exists',api_response, '\n');
+
+                    res.send(api_response)
                 }
             }
         })
     }    
     console.log('api response: ', api_response);
-    res.send(api_response)    
+    // res.send(api_response) 
 
 })
 
@@ -112,7 +123,7 @@ function checkParams(body, params) {
     let response = {}
     let notAvailable = []
     params.forEach(element => {
-        if(body[element] === undefined) {
+        if(body[element] === undefined || body[element] === '' || body[element] === ' ') {
             response['error'] = true;
             notAvailable.push(element)
         }
